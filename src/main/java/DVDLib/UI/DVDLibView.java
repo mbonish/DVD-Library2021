@@ -5,8 +5,12 @@ import DVDLib.dto.DVD;
 import java.util.List;
 
 public class DVDLibView {
-    private final UserIO io = new UserIOConsoleImpl();
 
+    private UserIO io;
+    public DVDLibView(UserIO io){
+        this.io = io;
+
+    }
     public int printMenuAndGetSelection() {
         io.print("Main Menu");
         io.print("-1 List DVDs");
@@ -177,5 +181,18 @@ public class DVDLibView {
         } else io.print(dvd.getUserRating() + " has not been changed.");
 
         io.print("Hit enter to continue");
+    }
+
+    public void displayExitBanner(){
+        io.print("Good Bye!!!");
+    }
+
+    public void displayUnknownCommandBanner(){
+        io.print("Unknown Command!!!");
+    }
+
+    public void displayErrorMessage(String errorMsg) {
+        io.print("=== ERROR ===");
+        io.print(errorMsg);
     }
 }
