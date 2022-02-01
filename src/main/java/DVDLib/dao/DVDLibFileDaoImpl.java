@@ -1,54 +1,106 @@
-package DVDLib.dao;
+package DVDLib.controller;
 
+import DVDLib.UI.DVDLibView;
+import DVDLib.UI.UserIO;
+import DVDLib.UI.UserIOConsoleImpl;
+import DVDLib.dao.DVDLibDao;
+import DVDLib.dao.DVDLibException;
 import DVDLib.dto.DVD;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-public class DVDLibFileDaoImpl implements DVDLibDao {
+public class DVDLibController {
 
+    private final UserIO io = new UserIOConsoleImpl();
+    private DVDLibView view;
+    private DVDLibDao dao;
 
-    //Map that holds the values for the DVDs
-    private final Map<Integer, DVD> DVDs = new HashMap<>();
-
-    @Override
-    public DVD addDVD(DVD dvd) {
-       int DVDId=  getNextId();
-        DVD prevDVD = DVDs.put(DVDId, dvd);
-        return prevDVD;
+    public DVDLibController(DVDLibDao dao, DVDLibView view){
+        this.dao = dao;
+        this.view = view;
     }
 
-    @Override
-    public List<DVD> getAllDVDs() {
-        return new ArrayList<DVD>(DVDs.values());
-    }
 
-    @Override
-    public DVD getDVD(int DVDId) {
-        return DVDs.get(DVDId);
-    }
+    public void run() {
+        boolean keepGoing = true;
+        int menuSelection = 0;
 
-    @Override
-    public DVD editDVD(int DVDId) {
-        return DVDs.get(DVDId);
-    }
+        try {
+            while (keepGoing) {
+                menuSelection = getMenuSelection();
 
-    @Override
-    public DVD removeDVD(int DVDId) {
-        DVD removedDVD = DVDs.remove(DVDId);
-        return removedDVD;
-    }
-
-    private int getNextId() {
-        int largestId = 0;
-        //use the hash maps to get all the keys
-        List<Integer> ids = new ArrayList<Integer>(DVDs.keySet());
-        for(int currentId: ids)
-            if(largestId < currentId) {
-                largestId = currentId;
+                switch (menuSelection) {
+                    case 1:
+                        listDVDs();
+                        break;
+                    case 2:
+                        createDVD();
+                        break;
+                    case 3:
+                        viewDVD();
+                        break;
+                    case 4:
+                        editDVD();
+                        break;
+                    case 5:
+                        removeDVD();
+                        break;
+                    case 6:
+                        keepGoing = false;
+                        break;
+                    default:
+                        unknownCommand();
+                }
             }
-        return largestId+1;
+            exitMessage();
+        } catch (DVDLibException e){
+            view.displayErrorMessage(e.getMessage());
+        }
+    }
+
+    private int getMenuSelection(){
+        return view.printMenuAndGetSelection();
+    }
+
+    private void createDVD() throws DVDLibException {
+        view.displayCreateDVDBanner();
+        DVD newDvd = view.getNewDVDInfo();
+        dao.addDVD(newDvd);
+        view.displayCreateSuccessBanner();
+    }
+
+    private void listDVDs() throws DVDLibException {
+        view.displayAllBanner();
+        List<DVD> DVDList = dao.getAllDVDs();
+        view.displayDVDList(DVDList);
+    }
+
+    private void viewDVD() throws DVDLibException {
+        view.displayDisplayDVDBanner();
+        int DVDId = view.getDVDIdChoice();
+        DVD dvd = dao.getDVD(DVDId);
+        view.displayDVD(dvd);
+    }
+    private void removeDVD() throws DVDLibException {
+        view.displayRemoveDVDBanner();
+        int DVDId = view.getDVDIdChoice();
+        DVD removedDVD = dao.removeDVD(DVDId);
+        view.displayRemoveResult(removedDVD);
+    }
+
+    private void editDVD() throws DVDLibException {
+        view.displayEditDVDBanner();
+        int DVDId = view.getDVDIdChoice();
+        DVD editedDVD = dao.getDVD(DVDId);
+        view.displayEditedDVD(editedDVD);
+        view.displayDVD(editedDVD);
+    }
+
+    private void unknownCommand(){
+        view.displayUnknownCommandBanner();
+    }
+
+    private void exitMessage(){
+        view.displayExitBanner();
     }
 }
